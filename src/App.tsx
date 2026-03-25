@@ -258,7 +258,7 @@ function AppContent() {
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center overflow-hidden border border-gray-100">
             <img 
-              src="https://img.icons8.com/color/96/fox.png" 
+              src="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/fox.svg" 
               alt="De Taalvos" 
               className="w-full h-full object-contain p-1"
               referrerPolicy="no-referrer"
@@ -322,7 +322,7 @@ function LoginScreen() {
       <Card className="max-w-md w-full p-8 text-center">
         <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center overflow-hidden mx-auto mb-6 shadow-lg border border-gray-100">
           <img 
-            src="https://img.icons8.com/color/96/fox.png" 
+            src="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/fox.svg" 
             alt="De Taalvos" 
             className="w-full h-full object-contain p-2"
             referrerPolicy="no-referrer"
@@ -385,7 +385,7 @@ function TherapistDashboard({ profile }: { profile: UserProfile }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <ClientsList therapistId={profile.uid} shortId={profile.shortId} onSelectClient={setSelectedClient} />
+              <ClientsList therapistId={profile.uid} onSelectClient={setSelectedClient} />
             </motion.div>
           )}
 
@@ -420,7 +420,7 @@ function TherapistDashboard({ profile }: { profile: UserProfile }) {
   );
 }
 
-function ClientsList({ therapistId, shortId, onSelectClient }: { therapistId: string; shortId?: string; onSelectClient: (client: UserProfile) => void }) {
+function ClientsList({ therapistId, onSelectClient }: { therapistId: string; onSelectClient: (client: UserProfile) => void }) {
   const [clients, setClients] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -445,7 +445,7 @@ function ClientsList({ therapistId, shortId, onSelectClient }: { therapistId: st
         <Card className="p-12 text-center">
           <Users className="mx-auto text-gray-300 mb-4" size={48} />
           <p className="text-gray-500">Nog geen cliënten gekoppeld.</p>
-          <p className="text-sm text-gray-400 mt-2">Cliënten moeten jouw Koppelcode ({shortId || therapistId}) invoeren om te koppelen.</p>
+          <p className="text-sm text-gray-400 mt-2">Cliënten moeten jouw UID ({therapistId}) invoeren om te koppelen.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
