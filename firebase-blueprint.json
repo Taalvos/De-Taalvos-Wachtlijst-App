@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the app, either a therapist or a parent.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["therapist", "parent"] },
+        "name": { "type": "string" },
+        "therapistId": { "type": "string", "description": "The UID of the therapist for a parent user." }
+      },
+      "required": ["uid", "email", "role", "name"]
+    },
+    "Video": {
+      "title": "Video",
+      "description": "A video uploaded or linked by a therapist.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "description": { "type": "string" },
+        "therapistId": { "type": "string" }
+      },
+      "required": ["id", "title", "url", "therapistId"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "Links a video to a client.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "videoId": { "type": "string" },
+        "therapistId": { "type": "string" }
+      },
+      "required": ["clientId", "videoId", "therapistId"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A message between a therapist and a parent.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "receiverId", "text", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "/videos/{videoId}": {
+      "schema": "Video",
+      "description": "Library of videos."
+    },
+    "/assignments/{assignmentId}": {
+      "schema": "Assignment",
+      "description": "Video assignments to clients."
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Chat messages."
+    }
+  }
+}

@@ -1,0 +1,138 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: uid
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - role: string (required, 'therapist' or 'parent')
+    //   - name: string (required)
+    //   - therapistId: string (optional, for parents)
+    //
+    // Collection: videos
+    // Document ID: videoId
+    // Fields:
+    //   - id: string (required)
+    //   - title: string (required)
+    //   - url: string (required)
+    //   - description: string (optional)
+    //   - therapistId: string (required)
+    //
+    // Collection: assignments
+    // Document ID: assignmentId
+    // Fields:
+    //   - clientId: string (required)
+    //   - videoId: string (required)
+    //   - therapistId: string (required)
+    //
+    // Collection: messages
+    // Document ID: messageId
+    // Fields:
+    //   - senderId: string (required)
+    //   - receiverId: string (required)
+    //   - text: string (required)
+    //   - timestamp: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function isTherapist() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'therapist' ||
+         (request.auth.token.email == "lottestruik02@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isTherapistOf(clientId) {
+      return isTherapist() && 
+        (get(/databases/$(database)/documents/users/$(clientId)).data.therapistId == request.auth.uid ||
+         request.auth.token.email == "lottestruik02@gmail.com");
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'name']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['therapist', 'parent'] &&
+             data.name is string &&
+             data.name.size() < 100;
+    }
+
+    function isValidVideo(data) {
+      return data.keys().hasAll(['id', 'title', 'url', 'therapistId']) &&
+             data.id is string &&
+             data.title is string && data.title.size() < 200 &&
+             data.url is string &&
+             data.therapistId == request.auth.uid;
+    }
+
+    function isValidAssignment(data) {
+      return data.keys().hasAll(['clientId', 'videoId', 'therapistId']) &&
+             data.clientId is string &&
+             data.videoId is string &&
+             data.therapistId == request.auth.uid;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['senderId', 'receiverId', 'text', 'timestamp']) &&
+             data.senderId == request.auth.uid &&
+             data.receiverId is string &&
+             data.text is string && data.text.size() < 2000 &&
+             data.timestamp is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isTherapistOf(uid);
+      allow create: if isOwner(uid) && isValidUser(request.resource.data);
+      allow update: if isOwner(uid) && isValidUser(request.resource.data);
+    }
+
+    match /videos/{videoId} {
+      allow read: if isAuthenticated(); // Simplified for now, can be hardened
+      allow create: if isTherapist() && isValidVideo(request.resource.data);
+      allow update: if isTherapist() && resource.data.therapistId == request.auth.uid && isValidVideo(request.resource.data);
+      allow delete: if isTherapist() && resource.data.therapistId == request.auth.uid;
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isTherapist() && isValidAssignment(request.resource.data);
+      allow delete: if isTherapist() && resource.data.therapistId == request.auth.uid;
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow create: if isAuthenticated() && isValidMessage(request.resource.data);
+    }
+    
+    match /test/connection {
+      allow read: if true;
+    }
+    
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
